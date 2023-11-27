@@ -28,7 +28,7 @@ internal abstract class BaseResourceIterator<X>(
     @JvmName("flatMapIterator")
     override fun <R> flatMap(transform: (X) -> Iterator<R>): ResourceIterator<R> {
         checkOpen()
-        return FlatteningResourceIterator(this, transform) { it }
+        return FlatteningResourceIterator(source = this, transformer = transform, iteratorMap = { it })
     }
 
     override fun distinct(): ResourceIterator<X> {
@@ -41,8 +41,10 @@ internal abstract class BaseResourceIterator<X>(
     }
 
     override fun close() {
-        open = false
-        onClose()
+        if (open) {
+            open = false
+            onClose()
+        }
     }
 
     protected fun checkOpen() {
@@ -56,8 +58,11 @@ internal abstract class BaseResourceIterator<X>(
 
 internal open class WrappedResourceIterator<X>(
     protected val source: Iterator<X>,
-    onClose: () -> Unit,
-) : BaseResourceIterator<X>(onClose) {
+    private val onClose: () -> Unit,
+) : BaseResourceIterator<X>({
+    (source as? AutoCloseable)?.close()
+    onClose()
+}) {
 
     internal fun withOnClose(onClose: () -> Unit): WrappedResourceIterator<X> {
         return WrappedResourceIterator(this.source, onClose)
@@ -83,18 +88,13 @@ internal open class WrappedResourceIterator<X>(
             throw ex
         }
     }
-
-    override fun close() {
-        super.close()
-        (source as? AutoCloseable)?.close()
-    }
 }
 
 internal class FilteringResourceIterator<X>(
     source: Iterator<X>,
     onClose: () -> Unit,
     private val predicate: (X) -> Boolean
-) : WrappedResourceIterator<X>(source, onClose) {
+) : WrappedResourceIterator<X>(source = source, onClose = onClose) {
 
     private var nextItem: X? = null
 
@@ -214,14 +214,18 @@ internal class FlatteningResourceIterator<T, R, E>(
     private val source: ResourceIterator<T>,
     private val transformer: (T) -> R,
     private val iteratorMap: (R) -> Iterator<E>,
-) : BaseResourceIterator<E>({ source.close() }) {
+    private var openIterators: MutableList<Iterator<*>> = mutableListOf<Iterator<*>>().also { it.add(source) }
+) : BaseResourceIterator<E>({
+    openIterators.closeAll()
+    openIterators.clear()
+}) {
     private var itemIterator: Iterator<E>? = null
 
     override fun next(): E {
         checkOpen()
         if (!ensureItemIterator())
             throw NoSuchElementException()
-        return itemIterator!!.next()
+        return checkNotNull(itemIterator).next()
     }
 
     override fun hasNext(): Boolean {
@@ -244,6 +248,7 @@ internal class FlatteningResourceIterator<T, R, E>(
                 val nextItemIterator = iteratorMap(transformer(element))
                 if (nextItemIterator.hasNext()) {
                     itemIterator = nextItemIterator
+                    openIterators.add(itemIterator as Iterator<*>)
                     return true
                 }
             }
@@ -255,9 +260,13 @@ internal class FlatteningResourceIterator<T, R, E>(
 internal class CompoundResourceIterator<T>(
     left: Iterator<T>,
     right: Iterator<T>,
-) : BaseResourceIterator<T>({}) {
-    private var pending = mutableListOf<Iterator<T>?>()
-    private var handled = mutableSetOf<Iterator<T>>()
+    private var pending: MutableList<Iterator<T>?> = mutableListOf(),
+    private var handled: MutableSet<Iterator<T>> = mutableSetOf(),
+) : BaseResourceIterator<T>({
+    handled.closeAll()
+    pending.clear()
+    handled.clear()
+}) {
     private var index = 0
     private var current: Iterator<T> = left
 
@@ -291,13 +300,6 @@ internal class CompoundResourceIterator<T>(
     override fun plus(other: Iterator<T>): ResourceIterator<T> {
         pending.add(other)
         return this
-    }
-
-    override fun close() {
-        open = false
-        handled.forEach { (it as? AutoCloseable)?.close() }
-        pending.clear()
-        handled.clear()
     }
 
     private fun advance(): Iterator<T> {

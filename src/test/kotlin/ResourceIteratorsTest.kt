@@ -22,7 +22,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testFirst() {
+    fun `test first`() {
         var isClosed = false
         var i = 0
         val n = 10
@@ -32,7 +32,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testFirstOnNull() {
+    fun `test firstOrNull`() {
         var isClosed1 = false
         val iterator1 = generateResourceIterator({ null }) { isClosed1 = true }
         Assertions.assertNull(iterator1.firstOrNull())
@@ -47,7 +47,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testToList() {
+    fun `test toList`() {
         var isClosed = false
         val iterator = resourceIteratorOf("a", "b") { isClosed = true }
         val res = iterator.toList()
@@ -56,7 +56,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testToSet() {
+    fun `test toSet`() {
         var isClosed = false
         val iterator = resourceIteratorOf("a", "b", "c", "b", "c") { isClosed = true }
         val res = iterator.toSet()
@@ -65,7 +65,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testForEach() {
+    fun `test forEach`() {
         var isClosed = false
         val iterator = resourceIteratorOf("a", "b") { isClosed = true }
         val res = mutableListOf<String>()
@@ -75,7 +75,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testForEachRemaining() {
+    fun `test forEachRemaining`() {
         var isClosed = false
         val iterator = resourceIteratorOf("a", "b") { isClosed = true }
         val res = mutableListOf<String>()
@@ -85,7 +85,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testFilterToList() {
+    fun `test filter toList`() {
         var isClosed1 = false
         val source1 = resourceIteratorOf("a", "b", "c", "d") { isClosed1 = true }
         val iterator1 = source1.filter { it == "b" || it == "c" }
@@ -100,7 +100,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testMapToSet() {
+    fun `test map toSet`() {
         var isClosed1 = false
         val source1 = resourceIteratorOf(1, 2, 3) { isClosed1 = true }
         val iterator1 = source1.map { it.toString() }
@@ -115,7 +115,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testFilterMapForEach() {
+    fun `test filter map forEach`() {
         var isClosed = false
         val source = resourceIteratorOf(1, 2, 3) { isClosed = true }
         val iterator = source.filter { it > 1 }.map { it.toString() }.map { it.toInt() }.filter { it < 42 }
@@ -126,7 +126,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testFlatMapIterableToList() {
+    fun `test flatMapIterable toList`() {
         var isClosed1 = false
         val source1 = resourceIteratorOf(listOf(1, 2), listOf(3, 4), listOf(5)) { isClosed1 = true }
         val iterator1 = source1.flatMap { it }
@@ -156,7 +156,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testFlatMapIteratorForEach() {
+    fun `test flatMapIterator forEach`() {
         var isClosed1 = false
         val source1 = resourceIteratorOf(listOf(1, 2), listOf(3, 4), listOf(5)) { isClosed1 = true }
         val iterator1 = source1.flatMap { it.iterator() }
@@ -171,11 +171,11 @@ internal class ResourceIteratorTest {
         val res = mutableListOf<String>()
         iterator2.forEach { res.add(it) }
         Assertions.assertEquals(listOf("a1", "a2", "a3", "b1", "b2", "b3"), res)
-        Assertions.assertEquals(6, isClosed2)
+        Assertions.assertEquals(3, isClosed2)
     }
 
     @Test
-    fun testDistinctForEach() {
+    fun `test distinct forEach`() {
         var isClosed = false
         val source = resourceIteratorOf("a", "b", "c", "c", "b", "b", "b", "d") { isClosed = true }
         val iterator = source.distinct()
@@ -190,7 +190,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testConcatForEach() {
+    fun `test concat forEach`() {
         var isClosed1 = false
         var isClosed2 = false
         var isClosed3 = false
@@ -209,7 +209,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testForCycle() {
+    fun `test for-cycle`() {
         var isClosed1 = false
         val iterator1 = resourceIteratorOf("a", "b") { isClosed1 = true }
         var count1 = 0
@@ -234,7 +234,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testAnyForEach() {
+    fun `test any forEach`() {
         var isClosed1 = false
         val source1 = resourceIteratorOf(1, 2, 3) { isClosed1 = true }
         val res1 = source1.asResourceIterator().any { it > 1 }
@@ -249,7 +249,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testEmptyIteratorConcatToList() {
+    fun `test emptyIterator plus toList`() {
         Assertions.assertFalse(emptyResourceIterator<String>().map { 42 }.hasNext())
         Assertions.assertFalse(emptyResourceIterator<String>().filter { true }.hasNext())
         Assertions.assertFalse(emptyResourceIterator<String>().flatMap { resourceIteratorOf("a") }.hasNext())
@@ -266,7 +266,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testCount() {
+    fun `test count`() {
         var isClosed = false
         val iterator = resourceIteratorOf(1, 2, 3) { isClosed = true }
         Assertions.assertEquals(3, iterator.count())
@@ -274,7 +274,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun testAsSafeSequence() {
+    fun `test asSafeSequence`() {
         var i = 0
         var isClosed1 = false
         val iterator1 = generateResourceIterator({ if (i++ < 10) i else null }) { isClosed1 = true }
@@ -300,7 +300,7 @@ internal class ResourceIteratorTest {
     }
 
     @Test
-    fun rerunTest() {
+    fun `test iterate twice`() {
         var i = 0
         var isClosed1 = false
         val iterator1 = generateResourceIterator({ if (i++ < 10) i else null }) { isClosed1 = true }
@@ -322,6 +322,76 @@ internal class ResourceIteratorTest {
         assertIsClosed(isClosed3, iterator3)
         Assertions.assertEquals(0, iterator3.toList().size)
         assertIsClosed(isClosed3, iterator3)
+    }
+
+    @Test
+    fun `test flatMap filter findFirst`() {
+        var closeOuter = 0
+        var closeInner = 0
+        val it1 = listOf<Long>(1, 2).asResourceIterator {
+            closeOuter++
+        }
+
+        val it2 = it1.flatMap { x ->
+            resourceIteratorOf(21 * x, 42 * x) {
+                closeInner++
+            }
+        }
+        val it3 = it2
+            .filter { it > 0 }
+
+        it3.use {
+            Assertions.assertEquals(21, it.firstOrNull())
+        }
+        Assertions.assertEquals(1, closeOuter)
+        Assertions.assertEquals(1, closeInner)
+    }
+
+    @Test
+    fun `test nextOrNull`() {
+        Assertions.assertNull(emptyResourceIterator<Any>().nextOrNull())
+        Assertions.assertNotNull(resourceIteratorOf(42).nextOrNull())
+    }
+
+    @Test
+    fun `test Sequence#asResourceIterator count`() {
+        var onClose = 0
+        Assertions.assertEquals(
+            3,
+            sequenceOf("a", "b", "c").asResourceIterator { onClose++ }.count()
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test Map#asResourceIterator count`() {
+        var onClose = 0
+        Assertions.assertEquals(
+            3,
+            mapOf("a" to "A", "b" to "B", "c" to "C").asResourceIterator { onClose++ }.count()
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test sortBy toList`() {
+        val source = listOf(78, 2, 49, 8, 32, 42, 32, 3, 43, 34, 1, 42)
+        val expected = source.map { it.toString() }.sorted().map { it.toInt() }
+
+        val actual = source.asResourceIterator().sortedBy { it.toString() }.toList()
+        Assertions.assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `test sorted toList`() {
+        val source = listOf("h", "f", "D", "e", "m")
+        val expected = source.sorted()
+        var onClose = 0
+
+        val actual = source.asResourceIterator { onClose++ }.sorted()
+        Assertions.assertInstanceOf(ResourceIterator::class.java, actual)
+        Assertions.assertEquals(expected, actual.toList())
+        Assertions.assertEquals(1, onClose)
     }
 
 }

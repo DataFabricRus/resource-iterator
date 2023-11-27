@@ -59,8 +59,8 @@ fun <X> Iterator<X>.asResourceIterator(onClose: () -> Unit = {}): ResourceIterat
 /**
  * Returns an [ResourceIterator] over the entries in the [Map].
  */
-fun <K, V> Map<out K, V>.asResourceIterator(): ResourceIterator<Map.Entry<K, V>> {
-    return this.entries.asResourceIterator()
+fun <K, V> Map<out K, V>.asResourceIterator(onClose: () -> Unit = {}): ResourceIterator<Map.Entry<K, V>> {
+    return this.entries.asResourceIterator(onClose)
 }
 
 /**
@@ -246,17 +246,16 @@ fun <T> ResourceIterator<T>.onEach(action: (T) -> Unit): ResourceIterator<T> = m
 /**
  * [Closes][AutoCloseable.close] all resources from this [Collection].
  */
-inline fun <X : AutoCloseable?> Iterable<X>.closeAll(exception: (String) -> Throwable = { Exception(it) }) {
-    val ex = exception("Error while closing iterables")
+fun <X> Iterable<X>.closeAll(rootError: Throwable = Exception("Error while closing iterables")) {
     forEach {
         try {
-            it?.close()
+            (it as? AutoCloseable)?.close()
         } catch (ex: Exception) {
             ex.addSuppressed(ex)
         }
     }
-    if (ex.suppressed.isNotEmpty()) {
-        throw ex
+    if (rootError.suppressed.isNotEmpty()) {
+        throw rootError
     }
 }
 
