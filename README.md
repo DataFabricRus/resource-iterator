@@ -1,6 +1,7 @@
 ## Resource Iterator
 
-A simple JVM library providing `ResourceIterator` which is an `AutoCloseable` `kotlin.collections.Iterator`:
+A simple JVM library providing `ResourceIterator`,
+which is an extended `kotlin.collections.Iterator` implementing `java.lang.AutoCloseable` interface:
 
 ```kotlin
 interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
@@ -11,10 +12,10 @@ interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
 The standard kotlin-stdlib does not contain `Sequence` or `Iterator` which implement `AutoCloseable` interface
 (e.g., see open discussion: [KT-34719](https://youtrack.jetbrains.com/issue/KT-34719/Closeable-Sequences)).
 
-This library complements the standard functionality with an extended iterator
+This library complements the standard kotlin functionality with an extended iterator
 as well as various utility methods such as `flatMap`, `filter`, etc., similar to `Sequence` methods.
-Each of these methods produces an `ResourceIterator` iterator, closing which also closes the source iterator.
-`ResourceIterator` extends `Iterator`, not `Sequence`, since it is hard to control every standard method-extension
+Each of these methods produces a subsequent `ResourceIterator`, closing which also closes the source iterator.
+The `ResourceIterator` extends `Iterator`, not `Sequence`, since it is hard to control every standard method-extension
 of `Sequence`.
 
 #### Examples of use:
@@ -42,18 +43,16 @@ fun <X> Connection.executeQuery(
 }
 ```
 
-#### Available via [jitpack](https://jitpack.io/#DataFabricRus/textfile-utils):
+#### Available via [jitpack](https://jitpack.io/#DataFabricRus/resource-iterator):
 
 ```kotlin
-allprojects {
-    repositories {
-        ...
-        maven { url 'https://jitpack.io' }
-    }
+repositories {
+    ...
+    maven(url = "https://jitpack.io")
 }
 
 dependencies {
-    implementation 'com.github.DataFabricRus:resource-iterator:{{last_version}}'
+    implementation("com.github.DataFabricRus:resource-iterator:{{latest_version}}")
 }
 ```
 
