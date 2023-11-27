@@ -406,4 +406,92 @@ internal class ResourceIteratorTest {
         )
         Assertions.assertEquals(1, onClose)
     }
+
+    @Test
+    fun `test groupBy`() {
+        var onClose = 0
+        val res = resourceIteratorOf(56, 2, 87, 99, 99, 99, 99, 2) { onClose++ }.groupBy { it.toString() }
+        Assertions.assertEquals(
+            mapOf("56" to listOf(56), "2" to listOf(2, 2), "87" to listOf(87), "99" to listOf(99, 99, 99, 99)),
+            res
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test associateBy`() {
+        var onClose = 0
+        val res = resourceIteratorOf(4, 3, 5, 2, 6, 1, 7) { onClose++ }.associateBy { it.toString() }
+        Assertions.assertEquals(
+            mapOf("1" to 1, "2" to 2, "3" to 3, "4" to 4, "5" to 5, "6" to 6, "7" to 7),
+            res,
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test associate`() {
+        var onClose = 0
+        val res = resourceIteratorOf(4, 3, 5, 2, 6, 1, 7) { onClose++ }.associate { it.toString() to it }
+        Assertions.assertEquals(
+            mapOf("1" to 1, "2" to 2, "3" to 3, "4" to 4, "5" to 5, "6" to 6, "7" to 7),
+            res,
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test toMap`() {
+        var onClose = 0
+        val res = listOf("1" to 1, "2" to 2, "3" to 3, "4" to 4, "5" to 5, "6" to 6, "7" to 7)
+            .asResourceIterator { onClose++ }.toMap()
+        Assertions.assertEquals(
+            mapOf("1" to 1, "2" to 2, "3" to 3, "4" to 4, "5" to 5, "6" to 6, "7" to 7),
+            res,
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test toSortedSet`() {
+        var onClose = 0
+        val res = resourceIteratorOf(5, 6, 4, 3, 5, 2, 6, 1, 7) { onClose++ }.toSortedSet()
+        Assertions.assertEquals(
+            sortedSetOf(1, 2, 3, 4, 5, 6, 7),
+            res,
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test fold`() {
+        var onClose = 0
+        val res = resourceIteratorOf(5, 6, 4, 3, 5, 2, 6, 1, 7) { onClose++ }
+            .fold(0) { a, b -> a + b }
+        Assertions.assertEquals(39, res)
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test all`() {
+        var onClose = 0
+        val res1 = resourceIteratorOf(5, 6, 4, 3, 5, 2, 6, 1, 7) { onClose++ }.all { it > 0 }
+        Assertions.assertTrue(res1)
+        Assertions.assertEquals(1, onClose)
+        val res2 = resourceIteratorOf(5, 6, 4, 3, 5, 2, 6, 1, 7) { onClose++ }.all { it < 6 }
+        Assertions.assertFalse(res2)
+        Assertions.assertEquals(2, onClose)
+    }
+
+    @Test
+    fun `test onEach count`() {
+        var onClose = 0
+        var count = 0
+        val res = resourceIteratorOf(5, 6, 4, 3, 5, 2, 6, 1, 7) { onClose++ }.onEach {
+            count++
+        }.count()
+        Assertions.assertEquals(9, count)
+        Assertions.assertEquals(9, res)
+        Assertions.assertEquals(1, onClose)
+    }
 }

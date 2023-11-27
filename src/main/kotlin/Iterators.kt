@@ -259,14 +259,6 @@ fun <X> Iterable<X>.closeAll(rootError: Throwable = Exception("Error while closi
     }
 }
 
-inline fun <X, R> Iterable<ResourceIterator<X>>.use(block: (Iterable<ResourceIterator<X>>) -> R): R =
-    try {
-        block(this)
-    } finally {
-        closeAll()
-    }
-
-
 /**
  * Provides an internal [Sequence] to be used for calling terminal Sequence's methods
  * (i.e., those methods that reach the end of the underlying [ResourceIterator]).
