@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 internal class ResourceIteratorTest {
 
     companion object {
+
         private fun assertIsClosed(isClosed: Boolean, iterator: Iterator<Any>) {
             Assertions.assertTrue(isClosed)
             repeat(2) {
@@ -394,4 +395,15 @@ internal class ResourceIteratorTest {
         Assertions.assertEquals(1, onClose)
     }
 
+    @Test
+    fun `test mapNotNull toList`() {
+        var onClose = 0
+        Assertions.assertEquals(
+            listOf("A"),
+            resourceIteratorOf(1, 2) {
+                onClose++
+            }.mapNotNull { if (it == 1) null else "A" }.toList(),
+        )
+        Assertions.assertEquals(1, onClose)
+    }
 }

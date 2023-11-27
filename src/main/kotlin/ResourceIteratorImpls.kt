@@ -5,7 +5,7 @@ package cc.datafabric.iterators
 internal abstract class BaseResourceIterator<X>(
     private val onClose: () -> Unit,
 ) : ResourceIterator<X> {
-    protected var open: Boolean = true
+    private var open: Boolean = true
 
     override fun filter(predicate: (X) -> Boolean): ResourceIterator<X> {
         checkOpen()
@@ -14,7 +14,7 @@ internal abstract class BaseResourceIterator<X>(
 
     override fun <R> map(transform: (X) -> R): ResourceIterator<R> {
         checkOpen()
-        return TransformingResourceIterator(this, onClose, transform)
+        return TransformingResourceIterator(this, { close() }, transform)
     }
 
     @OverloadResolutionByLambdaReturnType
@@ -47,6 +47,8 @@ internal abstract class BaseResourceIterator<X>(
         }
     }
 
+    protected fun open(): Boolean = open
+
     protected fun checkOpen() {
         check(open) { "Iterator is closed." }
     }
@@ -69,7 +71,7 @@ internal open class WrappedResourceIterator<X>(
     }
 
     override fun hasNext(): Boolean {
-        if (!open) {
+        if (!open()) {
             return false
         }
         if (source.hasNext()) {
@@ -140,10 +142,13 @@ internal class TransformingResourceIterator<T, R>(
     private val source: Iterator<T>,
     onClose: () -> Unit,
     private val transformer: (T) -> (R),
-) : BaseResourceIterator<R>(onClose) {
+) : BaseResourceIterator<R>({
+    (source as? AutoCloseable)?.close()
+    onClose()
+}) {
 
     override fun hasNext(): Boolean {
-        if (!open) {
+        if (!open()) {
             return false
         }
         if (source.hasNext()) {
@@ -200,7 +205,7 @@ internal class GeneratorResourceIterator<T>(
     }
 
     override fun hasNext(): Boolean {
-        if (!open) {
+        if (!open()) {
             return false
         }
         if (nextState < 0) {
@@ -233,7 +238,7 @@ internal class FlatteningResourceIterator<T, R, E>(
     }
 
     private fun ensureItemIterator(): Boolean {
-        if (!open) {
+        if (!open()) {
             return false
         }
         if (itemIterator?.hasNext() == false) {
@@ -276,7 +281,7 @@ internal class CompoundResourceIterator<T>(
     }
 
     override fun hasNext(): Boolean {
-        if (!open) {
+        if (!open()) {
             return false
         }
         while (!current.hasNext() && index < pending.size) {
