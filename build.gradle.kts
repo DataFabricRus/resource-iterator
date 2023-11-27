@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     val junitVersion: String by project
-    val kotlinCoroutinesVersion: String by project
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
 }
 
 publishing {
