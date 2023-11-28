@@ -1,6 +1,6 @@
 ## Resource Iterator
 
-A simple JVM library providing `ResourceIterator`,
+A simple kotlin library providing `ResourceIterator`,
 which is an extended `kotlin.collections.Iterator` implementing `java.lang.AutoCloseable` interface:
 
 ```kotlin
@@ -18,9 +18,23 @@ Each of these methods produces a subsequent `ResourceIterator`, closing which al
 The `ResourceIterator` extends `Iterator`, not `Sequence`, since it is hard to control every standard method-extension
 of `Sequence`.
 
+#### Known alternatives:
+
+- JDK `java.util.stream.Stream`
+- Apache Jena `org.apache.jena.util.iterator.ExtendedIterator`
+- Apache Kafka `org.apache.kafka.common.utils.CloseableIterator`
+
+#### When to use:
+
+If you have some resources which need to be closed after or during iteration,
+and you don't want to use JDK or some external heavy library.
+For example, `ResourceIterator` is used by [textfile-utils](https://github.com/DataFabricRus/textfile-utils)
+(see `cc.datafabric.textfileutils.files.LineReade.kt`).
+
 #### Examples of use:
 
 ```kotlin
+// with standard collections:
 listOf<Long>(1, 2).asResourceIterator { println("close outer") }
     .flatMap { x ->
         resourceIteratorOf(21 * x, 42 * x) { println("close inner for $x") }
@@ -32,6 +46,7 @@ listOf<Long>(1, 2).asResourceIterator { println("close outer") }
 ```
 
 ```kotlin
+// with jdbc:
 fun <X> Connection.executeQuery(
     query: String,
     extractor: (ResultSet) -> X,

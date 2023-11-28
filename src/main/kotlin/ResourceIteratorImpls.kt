@@ -100,9 +100,7 @@ internal class FilteringResourceIterator<X>(
 
     private var nextItem: X? = null
 
-    // `nextState = -1` if iteration is not started yet,
-    // `nextState = 0` if the iterator is done,
-    // `nextState = 1` if the iteration is in progress
+    // -1 for next unknown, 0 for done, 1 for continue
     private var nextState: Int = -1
 
     private fun calcNext() {
@@ -169,6 +167,9 @@ internal class TransformingResourceIterator<T, R>(
     }
 }
 
+/**
+ * see also `kotlin.sequences.GeneratorSequence`
+ */
 internal class GeneratorResourceIterator<T>(
     private val getNext: () -> T?,
     onClose: () -> Unit,
@@ -176,9 +177,7 @@ internal class GeneratorResourceIterator<T>(
 
     private var nextItem: T? = null
 
-    // `nextState = -1` if iteration is not started yet,
-    // `nextState = 0` if the iterator is done,
-    // `nextState = 1` if the iteration is in progress
+    // -1 for next unknown, 0 for done, 1 for continue
     private var nextState: Int = -1
 
     private fun calcNext() {
@@ -199,7 +198,6 @@ internal class GeneratorResourceIterator<T>(
             throw NoSuchElementException()
         }
         val res = nextItem as T
-        // Do not clean nextItem (to avoid keeping reference on yielded instance) -- need to keep state for getNextValue
         nextState = -1
         return res
     }
@@ -215,6 +213,9 @@ internal class GeneratorResourceIterator<T>(
     }
 }
 
+/**
+ * see `kotlin.sequences.FlatteningSequence`
+ */
 internal class FlatteningResourceIterator<T, R, E>(
     private val source: ResourceIterator<T>,
     private val transformer: (T) -> R,
