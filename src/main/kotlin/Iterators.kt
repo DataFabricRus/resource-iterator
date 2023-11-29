@@ -152,6 +152,33 @@ fun <T, K, V> ResourceIterator<T>.associate(transform: (T) -> Pair<K, V>): Map<K
 }
 
 /**
+ * Analogy of the `Sequence<T>.associateByTo`.
+ */
+inline fun <T, K, M : MutableMap<in K, in T>> ResourceIterator<T>.associateByTo(
+    destination: M,
+    keySelector: (T) -> K
+): M =
+    use {
+        for (i in this) {
+            destination.put(keySelector(i), i)
+        }
+        return destination
+    }
+
+/**
+ * Analogy of the `Sequence<T>.associateTo`.
+ */
+inline fun <T, K, V, M : MutableMap<in K, in V>> ResourceIterator<T>.associateTo(
+    destination: M,
+    transform: (T) -> Pair<K, V>
+): M = use {
+    for (i in this) {
+        destination += transform(i)
+    }
+    return destination
+}
+
+/**
  * Returns a new map containing all key-value pairs from the given resource-iterator of pairs.
  *
  * The returned map preserves the entry iteration order of the original resource-iterator.

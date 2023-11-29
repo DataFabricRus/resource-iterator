@@ -494,4 +494,34 @@ internal class ResourceIteratorTest {
         Assertions.assertEquals(9, res)
         Assertions.assertEquals(1, onClose)
     }
+
+    @Test
+    fun `test associateByTo`() {
+        var onClose = 0
+        val res: MutableMap<String, Int> = resourceIteratorOf(42, 42, 4242, 424242) { onClose++ }
+            .associateByTo(mutableMapOf()) { it.toString() }
+        Assertions.assertEquals(
+            mapOf(
+                "42" to 42, "4242" to 4242, "424242" to 424242
+            ),
+            res
+        )
+        Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test associateTo`() {
+        var onClose = 0
+        val res: MutableMap<Int, Int> = resourceIteratorOf(42, 42, 4242, 424242) { onClose++ }
+            .associateTo(mutableMapOf()) { a -> a / 2 to a * 2 }
+        Assertions.assertEquals(
+            mapOf(
+                21 to 84,
+                2121 to 8484,
+                212121 to 848484,
+            ),
+            res
+        )
+        Assertions.assertEquals(1, onClose)
+    }
 }
