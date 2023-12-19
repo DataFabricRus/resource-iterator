@@ -1,3 +1,5 @@
+@file:Suppress("DuplicatedCode")
+
 package cc.datafabric.iterators
 
 @Suppress("INAPPLICABLE_JVM_NAME")
@@ -10,6 +12,11 @@ internal abstract class BaseResourceIterator<X>(
     override fun filter(predicate: (X) -> Boolean): ResourceIterator<X> {
         checkOpen()
         return FilteringResourceIterator(this, onClose, predicate)
+    }
+
+    override fun takeWhile(predicate: (X) -> Boolean): ResourceIterator<X> {
+        checkOpen()
+        return TakeWhileResourceIterator(this, onClose, predicate)
     }
 
     override fun <R> map(transform: (X) -> R): ResourceIterator<R> {
@@ -92,6 +99,9 @@ internal open class WrappedResourceIterator<X>(
     }
 }
 
+/**
+ * see `kotlin.sequences.FilteringSequence`
+ */
 internal class FilteringResourceIterator<X>(
     source: Iterator<X>,
     onClose: () -> Unit,
@@ -136,6 +146,56 @@ internal class FilteringResourceIterator<X>(
     }
 }
 
+/**
+ * see `kotlin.sequences.TakeWhileSequence`
+ */
+internal class TakeWhileResourceIterator<X>(
+    source: Iterator<X>,
+    onClose: () -> Unit,
+    private val predicate: (X) -> Boolean
+) : WrappedResourceIterator<X>(source = source, onClose = onClose) {
+
+    private var nextItem: X? = null
+
+    // -1 for next unknown, 0 for done, 1 for continue
+    private var nextState: Int = -1
+
+    private fun calcNext() {
+        if (source.hasNext()) {
+            val item = source.next()
+            if (predicate(item)) {
+                nextItem = item
+                nextState = 1
+                return
+            }
+        }
+        nextState = 0
+        close()
+    }
+
+    override fun next(): X {
+        checkOpen()
+        if (nextState == -1)
+            calcNext()
+        if (nextState == 0)
+            throw NoSuchElementException()
+        val result = nextItem
+        nextItem = null
+        nextState = -1
+        @Suppress("UNCHECKED_CAST")
+        return result as X
+    }
+
+    override fun hasNext(): Boolean {
+        if (nextState == -1)
+            calcNext()
+        return nextState == 1
+    }
+}
+
+/**
+ * see `kotlin.sequences.TransformingSequence`
+ */
 internal class TransformingResourceIterator<T, R>(
     private val source: Iterator<T>,
     onClose: () -> Unit,
@@ -320,7 +380,12 @@ internal class CompoundResourceIterator<T>(
 @Suppress("INAPPLICABLE_JVM_NAME")
 @OptIn(kotlin.experimental.ExperimentalTypeInference::class)
 internal class EmptyResourceIterator<X> : BaseResourceIterator<X>({}) {
+
     override fun filter(predicate: (X) -> Boolean): ResourceIterator<X> {
+        return EmptyResourceIterator()
+    }
+
+    override fun takeWhile(predicate: (X) -> Boolean): ResourceIterator<X> {
         return EmptyResourceIterator()
     }
 

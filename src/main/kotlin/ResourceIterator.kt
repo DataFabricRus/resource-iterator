@@ -30,6 +30,12 @@ interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
     fun filter(predicate: (X) -> Boolean): ResourceIterator<X>
 
     /**
+     * Returns a sequence containing first elements satisfying the given [predicate].
+     * The operation is _intermediate_ and _stateless_.
+     */
+    fun takeWhile(predicate: (X) -> Boolean): ResourceIterator<X>
+
+    /**
      * Returns a resource iterator containing the results of applying the given [transform] function
      * to each element in this iterator.
      * The operation is _intermediate_ and _stateless_.
