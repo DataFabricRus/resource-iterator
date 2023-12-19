@@ -101,6 +101,25 @@ internal class ResourceIteratorTest {
     }
 
     @Test
+    fun `test takeWhile onEach toList`() {
+        var isClosed1 = false
+        var count1 = 0
+        val source1 = resourceIteratorOf(1, 2, 3, 1, 2, 3, 1, 2, 3) { isClosed1 = true }.onEach { count1++ }
+        val iterator1 = source1.takeWhile { it < 3 }
+        Assertions.assertEquals(listOf(1, 2), iterator1.toList())
+        Assertions.assertEquals(3, count1)
+        assertIsClosed(isClosed1, iterator1)
+
+        var isClosed2 = false
+        var count2 = 0
+        val source2 = resourceIteratorOf(1, 2, 3, 4) { isClosed2 = true }.onEach { count2++ }
+        val iterator2 = source2.takeWhile { it < 4 }.takeWhile { it < 2 }
+        Assertions.assertEquals(listOf(1), iterator2.toList())
+        Assertions.assertEquals(2, count2)
+        assertIsClosed(isClosed2, iterator2)
+    }
+
+    @Test
     fun `test map toSet`() {
         var isClosed1 = false
         val source1 = resourceIteratorOf(1, 2, 3) { isClosed1 = true }
