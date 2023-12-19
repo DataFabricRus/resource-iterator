@@ -1,7 +1,7 @@
 ## Resource Iterator
 
 A simple kotlin library providing `ResourceIterator`,
-which is an extended `kotlin.collections.Iterator` implementing `java.lang.AutoCloseable` interface:
+which is an extended `kotlin.collections.Iterator` implementing `AutoCloseable` interface:
 
 ```kotlin
 interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
