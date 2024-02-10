@@ -287,6 +287,16 @@ fun <X> Iterable<X>.closeAll(rootError: Throwable = Exception("Error while closi
 }
 
 /**
+ * Splits this ResourceIterator into a ResourceIterator of lists each not exceeding the given [size].
+ * The last list in the resulting ResourceIterator may have fewer elements than the given [size].
+ * @param size the number of elements to take in each list,
+ * must be positive and can be greater than the number of elements in this sequence.
+ * The operation is _intermediate_ and _stateful_.
+ */
+fun <T> ResourceIterator<T>.chunked(size: Int): ResourceIterator<List<T>> =
+    asSequence().chunked(size).asResourceIterator { this.close() }
+
+/**
  * Provides an internal [Sequence] to be used for calling terminal Sequence's methods
  * (i.e., those methods that reach the end of the underlying [ResourceIterator]).
  */

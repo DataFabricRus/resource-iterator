@@ -543,4 +543,20 @@ internal class ResourceIteratorTest {
         )
         Assertions.assertEquals(1, onClose)
     }
+
+    @Test
+    fun `test chunked`() {
+        var isClosed = false
+        val iterator = (1..42).asResourceIterator { isClosed = true }
+        val res = iterator.chunked(5).toList()
+        Assertions.assertEquals(9, res.size)
+        res.forEachIndexed { index, list ->
+            if (index == res.size - 1) {
+                Assertions.assertEquals(2, list.size)
+            } else {
+                Assertions.assertEquals(5, list.size)
+            }
+        }
+        assertIsClosed(isClosed, iterator)
+    }
 }
