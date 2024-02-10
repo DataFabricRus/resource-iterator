@@ -1,7 +1,6 @@
-package cc.datafabric.iterators
+@file:OptIn(ExperimentalStdlibApi::class)
 
-import java.util.SortedSet
-import java.util.TreeSet
+package cc.datafabric.iterators
 
 
 /**
@@ -189,14 +188,6 @@ fun <K, V> ResourceIterator<Pair<K, V>>.toMap(): Map<K, V> = use {
 }
 
 /**
- * Returns a new [SortedSet] of all elements.
- * The operation is _terminal_.
- */
-fun <T : Comparable<T>> ResourceIterator<T>.toSortedSet(): SortedSet<T> = use {
-    toCollection(TreeSet())
-}
-
-/**
  * Appends all elements to the given [destination] collection.
  * The operation is _terminal_.
  */
@@ -281,7 +272,7 @@ fun <X> Iterable<X>.closeAll(rootError: Throwable = Exception("Error while closi
             ex.addSuppressed(ex)
         }
     }
-    if (rootError.suppressed.isNotEmpty()) {
+    if (rootError.suppressedExceptions.isNotEmpty()) {
         throw rootError
     }
 }

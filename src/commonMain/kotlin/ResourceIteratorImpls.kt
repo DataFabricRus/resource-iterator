@@ -1,6 +1,9 @@
 @file:Suppress("DuplicatedCode")
+@file:OptIn(ExperimentalStdlibApi::class)
 
 package cc.datafabric.iterators
+
+import kotlin.jvm.JvmName
 
 @Suppress("INAPPLICABLE_JVM_NAME")
 @OptIn(kotlin.experimental.ExperimentalTypeInference::class)

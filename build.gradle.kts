@@ -1,30 +1,63 @@
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
     id("maven-publish")
     signing
 }
 
 group = "cc.datafabric"
-version = "1.1-SNAPSHOT"
+version = "1.2-SNAPSHOT"
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    val junitVersion: String by project
-    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+kotlin {
+    jvm {
+        jvmToolchain(11)
+    }
+    js {
+        browser()
+        nodejs()
+        binaries.library()
+    }
+
+    withSourcesJar(true)
+
+    val kotlinVersion: String by project
+
+    sourceSets {
+        val commonMain by getting
+        val jvmMain by getting
+        val jsMain by getting
+
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test-common"))
+                implementation(kotlin("test-annotations-common"))
+            }
+        }
+
+        val jvmTest by getting {
+            dependencies {
+                val junitVersion: String by project
+                implementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+                implementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+            }
+        }
+        val jsTest by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test-js:$kotlinVersion")
+            }
+        }
+    }
 }
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-
-            from(components["java"])
-
+        withType<MavenPublication> {
+            println("================================================")
+            println("$groupId:$artifactId:$version")
+            println("================================================")
             pom {
                 name.set("${project.group}:${project.name}")
                 description.set("Resource Iterator")
@@ -52,23 +85,10 @@ publishing {
     }
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
 signing {
-    sign(publishing.publications["maven"])
+    sign(publishing.publications["jvm"])
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.getByName("signMavenPublication") {
+tasks.getByName("signJvmPublication") {
     enabled = project.hasProperty("sign")
-}
-
-kotlin {
-    jvmToolchain(11)
 }

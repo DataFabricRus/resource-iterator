@@ -1,6 +1,7 @@
 package cc.datafabric.iterators
 
-import java.util.function.Consumer
+import kotlin.experimental.ExperimentalTypeInference
+import kotlin.jvm.JvmName
 
 /**
  * An extended iterator with resource closing functionality (extends [AutoCloseable]).
@@ -20,7 +21,7 @@ import java.util.function.Consumer
  * In any case, the explicit iterator closing is highly recommended since any operations may throw an exceptions.
  */
 @Suppress("INAPPLICABLE_JVM_NAME")
-@OptIn(kotlin.experimental.ExperimentalTypeInference::class)
+@OptIn(ExperimentalTypeInference::class, ExperimentalStdlibApi::class)
 interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
 
     /**
@@ -74,18 +75,6 @@ interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
      * The operation is _intermediate_ and _stateless_.
      */
     operator fun plus(other: Iterator<@UnsafeVariance X>): ResourceIterator<X>
-
-    /**
-     * Performs the given [action] for each remaining element until all elements
-     * have been processed or the [action] throws an exception.
-     */
-    override fun forEachRemaining(action: Consumer<in X>) {
-        use {
-            while (hasNext()) {
-                action.accept(next())
-            }
-        }
-    }
 
     /**
      * Returns the first element.

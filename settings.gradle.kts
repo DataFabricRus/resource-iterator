@@ -4,7 +4,7 @@ pluginManagement {
     plugins {
         plugins {
             val kotlinVersion: String by settings
-            kotlin("jvm") version kotlinVersion
+            kotlin("multiplatform") version kotlinVersion
         }
     }
 }
