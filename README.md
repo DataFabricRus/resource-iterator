@@ -67,7 +67,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.DataFabricRus:resource-iterator:{{latest_version}}")
+    implementation("com.github.DataFabricRus.resource-iterator:resource-iterator-jvm:{{latest_version}}")
 }
 ```
 
