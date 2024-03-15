@@ -117,6 +117,21 @@ interface ResourceIterator<out X> : Iterator<X>, AutoCloseable {
     }
 
     /**
+     * Returns the single element, or `null` if the iterator is empty or has more than one element.
+     * The operation is _terminal_.
+     */
+    fun singleOrNull(): X? {
+        use {
+            if (!hasNext())
+                return null
+            val single = next()
+            if (hasNext())
+                return null
+            return single
+        }
+    }
+
+    /**
      * Returns the number of elements in this iterator.
      * The operation is _terminal_.
      */
