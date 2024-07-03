@@ -1,5 +1,7 @@
 ## Resource Iterator
 
+[![](https://jitpack.io/v/DataFabricRus/resource-iterator.svg)](https://jitpack.io/#DataFabricRus/resource-iterator)
+
 A simple kotlin library providing `ResourceIterator`,
 which is an extended `kotlin.collections.Iterator` implementing `AutoCloseable` interface:
 
