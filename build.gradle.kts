@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "cc.datafabric"
-version = "1.1-SNAPSHOT-kotlin-1.7"
+version = "1.2-SNAPSHOT-kotlin-1.7"
 
 repositories {
     mavenCentral()
