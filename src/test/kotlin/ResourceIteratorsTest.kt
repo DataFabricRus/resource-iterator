@@ -229,6 +229,71 @@ internal class ResourceIteratorTest {
     }
 
     @Test
+    fun `test concat findFirst`() {
+        var isClosed1 = false
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { isClosed1 = true }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        val actual = iterator.firstOrNull()
+        Assertions.assertEquals("a", actual)
+        assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun `test concat take`() {
+        var isClosed1 = false
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { isClosed1 = true }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        val actual = iterator.take(3).toList()
+        Assertions.assertEquals(listOf("a", "b", "c"), actual)
+        assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun `test concat drop`() {
+        var isClosed1 = false
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { isClosed1 = true }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        val actual = iterator.drop(3).toList()
+        Assertions.assertEquals(listOf("d", "e"), actual)
+        assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun `test concat throw`() {
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { throw IllegalStateException("expected") }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        Assertions.assertThrows(IllegalStateException::class.java) { iterator.toList() }
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
     fun `test for-cycle`() {
         var isClosed1 = false
         val iterator1 = resourceIteratorOf("a", "b") { isClosed1 = true }
@@ -542,5 +607,29 @@ internal class ResourceIteratorTest {
             res
         )
         Assertions.assertEquals(1, onClose)
+    }
+
+    @Test
+    fun `test chunked`() {
+        var isClosed = false
+        val iterator = (1..42).asResourceIterator { isClosed = true }
+        val res = iterator.chunked(5).toList()
+        Assertions.assertEquals(9, res.size)
+        res.forEachIndexed { index, list ->
+            if (index == res.size - 1) {
+                Assertions.assertEquals(2, list.size)
+            } else {
+                Assertions.assertEquals(5, list.size)
+            }
+        }
+        assertIsClosed(isClosed, iterator)
+    }
+
+    @Test
+    fun `test toCollection`() {
+        var isClosed = false
+        val res = (1..42).asResourceIterator { isClosed = true }.toCollection(hashSetOf())
+        Assertions.assertEquals(42, res.size)
+        Assertions.assertTrue(isClosed)
     }
 }

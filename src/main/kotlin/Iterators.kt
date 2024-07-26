@@ -270,18 +270,83 @@ fun <T> ResourceIterator<T>.onEach(action: (T) -> Unit): ResourceIterator<T> = m
     it
 }
 
+
 /**
- * [Closes][AutoCloseable.close] all resources from this [Collection].
+ * Splits this ResourceIterator into a ResourceIterator of lists each not exceeding the given [size].
+ * The last list in the resulting ResourceIterator may have fewer elements than the given [size].
+ * @param size the number of elements to take in each list,
+ * must be positive and can be greater than the number of elements in this sequence.
+ * The operation is _intermediate_ and _stateful_.
+ */
+fun <T> ResourceIterator<T>.chunked(size: Int): ResourceIterator<List<T>> =
+    asInternalSequence().chunked(size).asResourceIterator { this.close() }
+
+/**
+ * Returns a resource-iterator containing first [n] elements.
+ * @throws IllegalArgumentException if [n] is negative or bigger than max-int
+ */
+fun <T> ResourceIterator<T>.take(n: Long): ResourceIterator<T> {
+    require(n >= 0 && n <= Int.MAX_VALUE) { "Requested element count $n should be in range [0, ${Int.MAX_VALUE}]." }
+    return asInternalSequence().take(n.toInt()).asResourceIterator {
+        this.close()
+    }
+}
+
+/**
+ * Returns a resource-iterator containing all elements except first [n] elements.
+ * The operation is _intermediate_ and _stateless_.
+ * @throws IllegalArgumentException if [n] is negative or bigger than max-int
+ */
+fun <T> ResourceIterator<T>.drop(n: Long): ResourceIterator<T> {
+    require(n >= 0 && n <= Int.MAX_VALUE) { "Requested element count $n should be in range [0, ${Int.MAX_VALUE}]." }
+    return asInternalSequence().drop(n.toInt()).asResourceIterator {
+        this.close()
+    }
+}
+
+/**
+ * Safe closes all resources from this [Iterable] by calling [AutoCloseable.close] on each element in turn.
+ * It is guaranteed that every [AutoCloseable.close] will be called even if some exception occurs.
+ * Note that in case of multiple exception [rootError] is thrown,
+ * if there is a single exception it will be thrown, not [rootError].
  */
 fun <X> Iterable<X>.closeAll(rootError: Throwable = Exception("Error while closing iterables")) {
     forEach {
         try {
             (it as? AutoCloseable)?.close()
         } catch (ex: Exception) {
-            ex.addSuppressed(ex)
+            rootError.addSuppressed(ex)
         }
     }
-    if (rootError.suppressed.isNotEmpty()) {
+    if (rootError.suppressedExceptions.size == 1) {
+        throw rootError.suppressedExceptions[0]
+    }
+    if (rootError.suppressedExceptions.isNotEmpty()) {
+        throw rootError
+    }
+}
+
+/**
+ * Executes safely provided [operations].
+ * It is guaranteed that every operation will be executed, even if some exception occurs.
+ * Note that in case of multiple exception [rootError] is thrown,
+ * if there is a single exception it will be thrown, not rootError.
+ */
+internal fun safeExec(
+    vararg operations: () -> Unit,
+    rootError: Throwable = Exception("Error while executing operations")
+) {
+    operations.forEach {
+        try {
+            it()
+        } catch (ex: Exception) {
+            rootError.addSuppressed(ex)
+        }
+    }
+    if (rootError.suppressedExceptions.size == 1) {
+        throw rootError.suppressedExceptions[0]
+    }
+    if (rootError.suppressedExceptions.isNotEmpty()) {
         throw rootError
     }
 }
