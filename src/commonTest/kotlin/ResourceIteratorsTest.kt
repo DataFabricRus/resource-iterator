@@ -11,6 +11,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 
+@ExperimentalStdlibApi
 internal class ResourceIteratorTest {
 
     companion object {
@@ -222,6 +223,71 @@ internal class ResourceIteratorTest {
         }
         assertEquals(listOf("a", "b", "c", "d", "e"), actual)
         assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun testConcatAndFindFirst() {
+        var isClosed1 = false
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { isClosed1 = true }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        val actual = iterator.firstOrNull()
+        assertEquals("a", actual)
+        assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun testConcatAndTake() {
+        var isClosed1 = false
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { isClosed1 = true }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        val actual = iterator.take(3).toList()
+        assertEquals(listOf("a", "b", "c"), actual)
+        assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun testConcatAndDrop() {
+        var isClosed1 = false
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { isClosed1 = true }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        val actual = iterator.drop(3).toList()
+        assertEquals(listOf("d", "e"), actual)
+        assertIsClosed(isClosed1, source1)
+        assertIsClosed(isClosed2, source2)
+        assertIsClosed(isClosed3, source3)
+    }
+
+    @Test
+    fun testConcatAndThrow() {
+        var isClosed2 = false
+        var isClosed3 = false
+        val source1 = resourceIteratorOf("a", "b") { throw IllegalStateException("expected") }
+        val source2 = resourceIteratorOf("c", "d") { isClosed2 = true }
+        val source3 = resourceIteratorOf("e") { isClosed3 = true }
+        val iterator = source1 + source2 + source3
+
+        assertFailsWith(IllegalStateException::class) { iterator.toList() }
         assertIsClosed(isClosed2, source2)
         assertIsClosed(isClosed3, source3)
     }

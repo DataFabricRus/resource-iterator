@@ -72,8 +72,10 @@ internal open class WrappedResourceIterator<X>(
     protected val source: Iterator<X>,
     private val onClose: () -> Unit,
 ) : BaseResourceIterator<X>({
-    (source as? AutoCloseable)?.close()
-    onClose()
+    safeExec(
+        { (source as? AutoCloseable)?.close() },
+        { onClose() },
+    )
 }) {
 
     internal fun withOnClose(onClose: () -> Unit): WrappedResourceIterator<X> {
@@ -204,8 +206,10 @@ internal class TransformingResourceIterator<T, R>(
     onClose: () -> Unit,
     private val transformer: (T) -> (R),
 ) : BaseResourceIterator<R>({
-    (source as? AutoCloseable)?.close()
-    onClose()
+    safeExec(
+        { (source as? AutoCloseable)?.close() },
+        { onClose() },
+    )
 }) {
 
     override fun hasNext(): Boolean {
@@ -332,7 +336,10 @@ internal class CompoundResourceIterator<T>(
     private var pending: MutableList<Iterator<T>?> = mutableListOf(),
     private var handled: MutableSet<Iterator<T>> = mutableSetOf(),
 ) : BaseResourceIterator<T>({
-    handled.closeAll()
+    safeExec(
+        { handled.closeAll() },
+        { pending.closeAll() },
+    )
     pending.clear()
     handled.clear()
 }) {
