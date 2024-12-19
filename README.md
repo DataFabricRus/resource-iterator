@@ -60,16 +60,11 @@ fun <X> Connection.executeQuery(
 }
 ```
 
-#### Available via [jitpack](https://jitpack.io/#DataFabricRus/resource-iterator):
+#### Available via maven-central:
 
 ```kotlin
-repositories {
-    ...
-    maven(url = "https://jitpack.io")
-}
-
 dependencies {
-    implementation("com.github.DataFabricRus.resource-iterator:resource-iterator-jvm:{{latest_version}}")
+    implementation("io.github.datafabricrus:resource-iterator-jvm:{{latest_version}}")
 }
 ```
 
