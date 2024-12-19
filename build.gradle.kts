@@ -1,11 +1,14 @@
+import java.security.MessageDigest
+
 plugins {
     kotlin("jvm")
     id("maven-publish")
+    id("org.jetbrains.dokka")
     signing
 }
 
-group = "cc.datafabric"
-version = "1.2-SNAPSHOT-kotlin-1.7"
+group = "io.github.datafabricrus"
+version = "1.4-kotlin-1.7.0"
 
 repositories {
     mavenCentral()
@@ -14,6 +17,12 @@ repositories {
 dependencies {
     val junitVersion: String by project
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
 }
 
 publishing {
@@ -52,25 +61,45 @@ publishing {
     }
 }
 
+tasks.register<Jar>("javadocJar") {
+    dependsOn("dokkaHtml")
+    archiveClassifier.set("javadoc")
+    from(buildDir.resolve("dokka/html"))
+}
+
 java {
     withSourcesJar()
     withJavadocJar()
 }
 
 signing {
-    sign(publishing.publications["maven"])
+    sign(publishing.publications)
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.getByName("signMavenPublication") {
-    enabled = project.hasProperty("sign")
-}
+tasks.named("publishToMavenLocal") {
+    doLast {
+        println("================================================")
+        println("Generate MD5 files")
+        println("================================================")
+        val mavenLocalDir = file(repositories.mavenLocal().url)
+        val artifactPathAsString = project.group.toString().replace('.', '/') + "/${project.name}/${version}"
+        val artifactFile = mavenLocalDir.resolve(artifactPathAsString)
+        val files = artifactFile.walkTopDown()
+            .filter {
+                it.isFile && (it.extension == "jar" || it.extension == "pom" || it.extension == "module")
+            }
+        files.forEach { file ->
+            val md5 = MessageDigest.getInstance("MD5")
+                .digest(file.readBytes()).joinToString("") { "%02x".format(it) }
+            val sha1 = MessageDigest.getInstance("SHA-1")
+                .digest(file.readBytes()).joinToString("") { "%02x".format(it) }
 
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+            file.resolveSibling("${file.name}.md5").writeText(md5)
+            file.resolveSibling("${file.name}.sha1").writeText(sha1)
+        }
     }
 }
